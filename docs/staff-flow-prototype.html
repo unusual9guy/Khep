@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff Flow — Packing View</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF7F2;
+    --surface:#FFFFFF;
+    --ink:#2B2621;
+    --ink-soft:#6B6157;
+    --line:#E4DDD1;
+    --forest:#3D6B5C;
+    --forest-dark:#2C5045;
+    --kraft:#C97B3D;
+    --kraft-soft:#F3E3D2;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:28px 18px 80px;}
+
+  header{margin-bottom:20px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--forest);font-weight:600;
+  }
+  h1{
+    font-family:'Big Shoulders Display',sans-serif;
+    font-weight:700;
+    font-size:40px;
+    letter-spacing:.01em;
+    margin:2px 0 4px;
+  }
+  .sub{color:var(--ink-soft);font-size:14px;margin:0;}
+
+  .date-row{display:flex;gap:8px;overflow-x:auto;margin:22px 0 20px;padding-bottom:4px;}
+  .date-pill{
+    flex:0 0 auto;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;font-weight:600;
+    border:1.5px solid var(--line);
+    background:var(--surface);
+    color:var(--ink-soft);
+    padding:9px 16px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .date-pill.disabled{opacity:.45;cursor:default;}
+  .date-pill.active{
+    background:var(--forest);
+    border-color:var(--forest);
+    color:#fff;
+  }
+  .pill-check{display:none;margin-left:5px;color:var(--forest);font-weight:700;}
+  .date-pill.complete{border-color:var(--forest);}
+  .date-pill.complete .pill-check{display:inline;}
+  .date-pill.complete.active .pill-check{color:#fff;}
+
+  .date-content{display:none;}
+  .date-content.active{display:block;}
+
+  section.panel{margin-bottom:18px;}
+  .panel-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink-soft);font-weight:600;
+    margin:0 0 8px 2px;
+  }
+
+  /* SUMMARY */
+  .summary-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px;
+  }
+  .summary-total{
+    display:flex;align-items:baseline;gap:10px;
+    padding-bottom:12px;margin-bottom:12px;
+    border-bottom:1px dashed var(--line);
+  }
+  .summary-total .num{
+    font-family:'Big Shoulders Display',sans-serif;
+    font-weight:700;font-size:36px;color:var(--forest-dark);
+    line-height:1;
+  }
+  .summary-total .lbl{font-size:13px;color:var(--ink-soft);}
+  .breakdown-item{
+    display:flex;align-items:center;gap:10px;
+    padding:8px 0;
+  }
+  .breakdown-item + .breakdown-item{border-top:1px solid var(--line);}
+  .thumb{
+    width:34px;height:34px;border-radius:8px;flex:0 0 auto;
+    background:var(--kraft-soft);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--kraft);
+  }
+  .breakdown-item .name{font-size:14px;font-weight:500;flex:1;}
+  .qty-badge{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;font-weight:600;
+    background:var(--forest);color:#fff;
+    padding:3px 9px;border-radius:20px;
+  }
+
+  /* PLATFORMS */
+  .platform{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:12px;
+    margin-bottom:10px;
+    overflow:hidden;
+  }
+  .platform-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px;cursor:pointer;
+  }
+  .platform-head .name{font-weight:600;font-size:15px;}
+  .platform-head .meta{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;color:var(--ink-soft);
+  }
+  .chevron{
+    width:9px;height:9px;border-right:2px solid var(--ink-soft);border-bottom:2px solid var(--ink-soft);
+    transform:rotate(-45deg);transition:transform .15s ease;
+  }
+  .platform.open .chevron{transform:rotate(45deg);}
+  .check{display:none;color:var(--forest);font-weight:700;margin-right:6px;}
+  .platform.complete .check{display:inline;}
+  .platform.complete .platform-head .name{text-decoration:line-through;color:var(--ink-soft);}
+  .orders{max-height:0;overflow:hidden;transition:max-height .2s ease;}
+  .platform.open .orders{max-height:2000px;}
+
+  .order{border-top:1px solid var(--line);}
+  .order-head{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    padding:11px 16px 11px 28px;
+    background:var(--paper);
+  }
+  .order-head-left{
+    display:flex;align-items:baseline;gap:8px;cursor:pointer;flex:1;min-width:0;
+  }
+  .order-head .oid{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--forest-dark);
+  }
+  .order-head .ocount{font-size:11px;color:var(--ink-soft);}
+
+  .order-actions-top{flex:0 0 auto;display:none;}
+  .order.open.done .order-actions-top{display:block;}
+
+  .order-actions-bottom{padding:10px 16px 16px 28px;display:flex;justify-content:flex-end;}
+  .order.done .order-actions-bottom{display:none;}
+
+  .mark-btn{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;font-weight:600;
+    padding:5px 11px;
+    border-radius:6px;
+    border:1px solid var(--forest);
+    background:transparent;
+    color:var(--forest);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .mark-btn:hover{background:var(--forest);color:#fff;}
+  .undo-btn{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;font-weight:600;
+    padding:5px 11px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--ink-soft);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .undo-btn:hover{background:var(--line);color:var(--ink);}
+  .order.done .oid{text-decoration:line-through;color:var(--ink-soft);}
+  .order.done .order-head-left{opacity:.65;}
+  .products{max-height:0;overflow:hidden;transition:max-height .2s ease;background:var(--paper);}
+  .order.open .products{max-height:1000px;}
+
+  /* product label / ticket */
+  .product-label{
+    display:flex;gap:12px;align-items:center;
+    margin:8px 16px 8px 28px;
+    padding:10px 12px;
+    background:var(--surface);
+    border:1px dashed var(--line);
+    border-left:3px solid var(--kraft);
+    border-radius:6px;
+  }
+  .product-label .thumb{background:var(--forest);color:#fff;}
+  .product-info{flex:1;min-width:0;}
+  .product-info .pname{font-size:14px;font-weight:600;margin-bottom:3px;}
+  .product-fields{
+    display:flex;flex-wrap:wrap;gap:4px 10px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;color:var(--ink-soft);
+  }
+  .product-fields b{color:var(--ink);font-weight:600;}
+  .product-qty{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:15px;font-weight:600;color:var(--forest-dark);
+    flex:0 0 auto;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Chitra Home Decor · Packing Ops</div>
+    <h1>Staff Flow</h1>
+    <p class="sub">Pick a date to see what needs packing.</p>
+  </header>
+
+  <div class="date-row">
+    <button class="date-pill active" data-date="d1">Date 1 · Aug 23<span class="pill-check">✓</span></button>
+    <button class="date-pill" data-date="d2">Date 2 · Aug 24<span class="pill-check">✓</span></button>
+    <button class="date-pill disabled">Date N …</button>
+  </div>
+
+  <!-- DATE 1 -->
+  <div class="date-content active" id="d1">
+    <section class="panel">
+      <p class="panel-label">Summary</p>
+      <div class="summary-card">
+        <div class="summary-total">
+          <span class="num">20</span>
+          <span class="lbl">units to pack today, across all platforms</span>
+        </div>
+        <div class="breakdown-item"><span class="thumb">🏺</span><span class="name">Terracotta Vase</span><span class="qty-badge">5</span></div>
+        <div class="breakdown-item"><span class="thumb">🕯️</span><span class="name">Ceramic Candle Holder</span><span class="qty-badge">3</span></div>
+        <div class="breakdown-item"><span class="thumb">🧵</span><span class="name">Macrame Wall Hanging</span><span class="qty-badge">2</span></div>
+        <div class="breakdown-item"><span class="thumb">🛋️</span><span class="name">Woven Cushion Cover</span><span class="qty-badge">5</span></div>
+        <div class="breakdown-item"><span class="thumb">💡</span><span class="name">Rattan Table Lamp</span><span class="qty-badge">2</span></div>
+        <div class="breakdown-item"><span class="thumb">🪵</span><span class="name">Wooden Coaster Set</span><span class="qty-badge">3</span></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <p class="panel-label">Platforms</p>
+
+      <div class="platform open">
+        <div class="platform-head"><span class="name">Amazon</span><span class="meta">2 orders <span class="check">✓</span><span class="chevron"></span></span></div>
+        <div class="orders">
+          <div class="order">
+            <div class="order-head"><div class="order-head-left"><span class="oid">#AMZ-10231</span><span class="ocount">2 products</span></div><div class="order-actions-top"><button class="undo-btn">Undo</button></div></div>
+            <div class="products">
+              <div class="product-label"><span class="thumb">🏺</span><div class="product-info"><div class="pname">Terracotta Vase</div><div class="product-fields"><span><b>SKU</b> TC-VASE-04</span><span><b>Size</b> M</span></div></div><span class="product-qty">×4</span></div>
+              <div class="product-label"><span class="thumb">🕯️</span><div class="product-info"><div class="pname">Ceramic Candle Holder</div><div class="product-fields"><span><b>SKU</b> TC-CNDL-01</span><span><b>Size</b> S</span></div></div><span class="product-qty">×3</span></div>
+              <div class="order-actions-bottom"><button class="mark-btn">Mark completed</button></div>
+            </div>
+          </div>
+          <div class="order">
+            <div class="order-head"><div class="order-head-left"><span class="oid">#AMZ-10245</span><span class="ocount">1 product</span></div><div class="order-actions-top"><button class="undo-btn">Undo</button></div></div>
+            <div class="products">
+              <div class="product-label"><span class="thumb">🧵</span><div class="product-info"><div class="pname">Macrame Wall Hanging</div><div class="product-fields"><span><b>SKU</b> TC-MACR-02</span><span><b>Size</b> L</span></div></div><span class="product-qty">×2</span></div>
+              <div class="order-actions-bottom"><button class="mark-btn">Mark completed</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="platform open">
+        <div class="platform-head"><span class="name">Myntra</span><span class="meta">1 order <span class="check">✓</span><span class="chevron"></span></span></div>
+        <div class="orders">
+          <div class="order">
+            <div class="order-head"><div class="order-head-left"><span class="oid">#MYN-5581</span><span class="ocount">1 product</span></div><div class="order-actions-top"><button class="undo-btn">Undo</button></div></div>
+            <div class="products">
+              <div class="product-label"><span class="thumb">🛋️</span><div class="product-info"><div class="pname">Woven Cushion Cover</div><div class="product-fields"><span><b>SKU</b> TC-CUSH-07</span><span><b>Size</b> M</span></div></div><span class="product-qty">×5</span></div>
+              <div class="order-actions-bottom"><button class="mark-btn">Mark completed</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="platform open">
+        <div class="platform-head"><span class="name">Flipkart</span><span class="meta">1 order <span class="check">✓</span><span class="chevron"></span></span></div>
+        <div class="orders">
+          <div class="order">
+            <div class="order-head"><div class="order-head-left"><span class="oid">#FLP-8820</span><span class="ocount">2 products</span></div><div class="order-actions-top"><button class="undo-btn">Undo</button></div></div>
+            <div class="products">
+              <div class="product-label"><span class="thumb">💡</span><div class="product-info"><div class="pname">Rattan Table Lamp</div><div class="product-fields"><span><b>SKU</b> TC-LAMP-03</span><span><b>Size</b> M</span></div></div><span class="product-qty">×2</span></div>
+              <div class="product-label"><span class="thumb">🪵</span><div class="product-info"><div class="pname">Wooden Coaster Set</div><div class="product-fields"><span><b>SKU</b> TC-COAS-01</span><span><b>Size</b> S</span></div></div><span class="product-qty">×3</span></div>
+              <div class="order-actions-bottom"><button class="mark-btn">Mark completed</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="platform open">
+        <div class="platform-head"><span class="name">Pepperfry</span><span class="meta">1 order <span class="check">✓</span><span class="chevron"></span></span></div>
+        <div class="orders">
+          <div class="order">
+            <div class="order-head"><div class="order-head-left"><span class="oid">#PPF-3390</span><span class="ocount">1 product</span></div><div class="order-actions-top"><button class="undo-btn">Undo</button></div></div>
+            <div class="products">
+              <div class="product-label"><span class="thumb">🏺</span><div class="product-info"><div class="pname">Terracotta Vase</div><div class="product-fields"><span><b>SKU</b> TC-VASE-04</span><span><b>Size</b> M</span></div></div><span class="product-qty">×1</span></div>
+              <div class="order-actions-bottom"><button class="mark-btn">Mark completed</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- DATE 2 -->
+  <div class="date-content" id="d2">
+    <section class="panel">
+      <p class="panel-label">Summary</p>
+      <div class="summary-card">
+        <div class="summary-total">
+          <span class="num">8</span>
+          <span class="lbl">units to pack today, across all platforms</span>
+        </div>
+        <div class="breakdown-item"><span class="thumb">🕯️</span><span class="name">Ceramic Candle Holder</span><span class="qty-badge">6</span></div>
+        <div class="breakdown-item"><span class="thumb">💡</span><span class="name">Rattan Table Lamp</span><span class="qty-badge">2</span></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <p class="panel-label">Platforms</p>
+
+      <div class="platform open">
+        <div class="platform-head"><span class="name">Amazon</span><span class="meta">1 order <span class="check">✓</span><span class="chevron"></span></span></div>
+        <div class="orders">
+          <div class="order">
+            <div class="order-head"><div class="order-head-left"><span class="oid">#AMZ-10298</span><span class="ocount">1 product</span></div><div class="order-actions-top"><button class="undo-btn">Undo</button></div></div>
+            <div class="products">
+              <div class="product-label"><span class="thumb">🕯️</span><div class="product-info"><div class="pname">Ceramic Candle Holder</div><div class="product-fields"><span><b>SKU</b> TC-CNDL-01</span><span><b>Size</b> S</span></div></div><span class="product-qty">×6</span></div>
+              <div class="order-actions-bottom"><button class="mark-btn">Mark completed</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="platform open">
+        <div class="platform-head"><span class="name">Myntra</span><span class="meta">0 orders <span class="check">✓</span><span class="chevron"></span></span></div>
+        <div class="orders"></div>
+      </div>
+
+      <div class="platform open">
+        <div class="platform-head"><span class="name">Flipkart</span><span class="meta">1 order <span class="check">✓</span><span class="chevron"></span></span></div>
+        <div class="orders">
+          <div class="order">
+            <div class="order-head"><div class="order-head-left"><span class="oid">#FLP-8841</span><span class="ocount">1 product</span></div><div class="order-actions-top"><button class="undo-btn">Undo</button></div></div>
+            <div class="products">
+              <div class="product-label"><span class="thumb">💡</span><div class="product-info"><div class="pname">Rattan Table Lamp</div><div class="product-fields"><span><b>SKU</b> TC-LAMP-03</span><span><b>Size</b> M</span></div></div><span class="product-qty">×2</span></div>
+              <div class="order-actions-bottom"><button class="mark-btn">Mark completed</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="platform open">
+        <div class="platform-head"><span class="name">Pepperfry</span><span class="meta">0 orders <span class="check">✓</span><span class="chevron"></span></span></div>
+        <div class="orders"></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.date-pill:not(.disabled)').forEach(pill=>{
+    pill.addEventListener('click',()=>{
+      document.querySelectorAll('.date-pill').forEach(p=>p.classList.remove('active'));
+      pill.classList.add('active');
+      document.querySelectorAll('.date-content').forEach(c=>c.classList.remove('active'));
+      document.getElementById(pill.dataset.date).classList.add('active');
+    });
+  });
+  document.querySelectorAll('.platform-head').forEach(head=>{
+    head.addEventListener('click',()=>head.parentElement.classList.toggle('open'));
+  });
+  document.querySelectorAll('.order-head-left').forEach(left=>{
+    left.addEventListener('click',()=>left.closest('.order').classList.toggle('open'));
+  });
+  document.querySelectorAll('.mark-btn').forEach(btn=>{
+    btn.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      btn.closest('.order').classList.add('done');
+      refreshCompletion(btn);
+    });
+  });
+  document.querySelectorAll('.undo-btn').forEach(btn=>{
+    btn.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      btn.closest('.order').classList.remove('done');
+      refreshCompletion(btn);
+    });
+  });
+
+  function refreshCompletion(fromEl){
+    const platformEl=fromEl.closest('.platform');
+    updatePlatform(platformEl);
+    const dateContentEl=fromEl.closest('.date-content');
+    updateDate(dateContentEl);
+  }
+
+  function updatePlatform(platformEl){
+    const orders=platformEl.querySelectorAll('.order');
+    const allDone=orders.length===0 || Array.from(orders).every(o=>o.classList.contains('done'));
+    platformEl.classList.toggle('complete',allDone);
+  }
+
+  function updateDate(dateContentEl){
+    const platforms=dateContentEl.querySelectorAll('.platform');
+    const allComplete=platforms.length===0 || Array.from(platforms).every(p=>p.classList.contains('complete'));
+    dateContentEl.classList.toggle('complete',allComplete);
+    const pill=document.querySelector('.date-pill[data-date="'+dateContentEl.id+'"]');
+    if(pill) pill.classList.toggle('complete',allComplete);
+  }
+
+  // initial pass, e.g. platforms that start with 0 orders count as complete
+  document.querySelectorAll('.platform').forEach(updatePlatform);
+  document.querySelectorAll('.date-content').forEach(updateDate);
+</script>
+</body>
+</html>

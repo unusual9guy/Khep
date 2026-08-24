@@ -1,0 +1,864 @@
+<title>Khep Flows</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root {
+  --bg:       #EEF2FA;
+  --surface:  #FFFFFF;
+  --surface2: #E6EBF7;
+  --border:   #D0D9EF;
+  --text:     #0D1526;
+  --text2:    #4A5A78;
+  --text3:    #8A9BB8;
+
+  /* Admin — indigo */
+  --adm:      #4338CA;
+  --adm-lt:   #EEF2FF;
+  --adm-mid:  #6366F1;
+
+  /* Staff — cyan */
+  --stf:      #0E7490;
+  --stf-lt:   #ECFEFF;
+  --stf-mid:  #0891B2;
+
+  /* Decision — amber */
+  --dec:      #B45309;
+  --dec-lt:   #FFFBEB;
+  --dec-mid:  #D97706;
+
+  /* System — slate */
+  --sys:      #334155;
+  --sys-lt:   #F1F5F9;
+  --sys-mid:  #64748B;
+
+  /* States */
+  --ok:       #065F46; --ok-lt: #ECFDF5; --ok-mid: #059669;
+  --err:      #991B1B; --err-lt: #FEF2F2; --err-mid: #DC2626;
+  --wrn:      #92400E; --wrn-lt: #FFFBEB; --wrn-mid: #F59E0B;
+
+  --line:     #C8D4E8;
+  --radius:   10px;
+  --shadow:   0 1px 4px rgba(13,21,38,.06), 0 2px 10px rgba(13,21,38,.04);
+}
+
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg:       #0A1120;
+  --surface:  #121D30;
+  --surface2: #192538;
+  --border:   #223048;
+  --text:     #EDF2FA;
+  --text2:    #7A93B8;
+  --text3:    #3D5478;
+  --adm-lt:   #1A1A4E;
+  --stf-lt:   #042E3D;
+  --dec-lt:   #2A1800;
+  --sys-lt:   #192538;
+  --ok-lt:    #012317;
+  --err-lt:   #280808;
+  --wrn-lt:   #2A1800;
+  --line:     #223048;
+  --shadow:   0 1px 4px rgba(0,0,0,.25), 0 2px 10px rgba(0,0,0,.2);
+}}
+
+:root[data-theme="dark"] {
+  --bg:       #0A1120;
+  --surface:  #121D30;
+  --surface2: #192538;
+  --border:   #223048;
+  --text:     #EDF2FA;
+  --text2:    #7A93B8;
+  --text3:    #3D5478;
+  --adm-lt:   #1A1A4E;
+  --stf-lt:   #042E3D;
+  --dec-lt:   #2A1800;
+  --sys-lt:   #192538;
+  --ok-lt:    #012317;
+  --err-lt:   #280808;
+  --wrn-lt:   #2A1800;
+  --line:     #223048;
+  --shadow:   0 1px 4px rgba(0,0,0,.25), 0 2px 10px rgba(0,0,0,.2);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 32px 16px 72px;
+}
+
+/* ── Header ── */
+.header {
+  max-width: 580px;
+  margin: 0 auto 28px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.header-left {}
+.wordmark {
+  font-family: 'Sora', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: -.4px;
+  color: var(--adm);
+}
+.wordmark em { color: var(--text2); font-style: normal; font-weight: 600; }
+.header-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-top: 5px;
+}
+.theme-btn {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text2);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+.theme-btn:hover { background: var(--surface2); }
+
+/* ── Tabs ── */
+.tabs {
+  max-width: 580px;
+  margin: 0 auto 32px;
+  display: flex;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 5px;
+}
+.tab {
+  flex: 1;
+  padding: 11px 10px;
+  border-radius: 9px;
+  font-family: 'Sora', sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--text3);
+  transition: background .15s, color .15s;
+  text-align: center;
+  line-height: 1.3;
+}
+.tab:hover { color: var(--text); }
+.tab.on-adm { background: var(--adm); color: #fff; }
+.tab.on-stf { background: var(--stf-mid); color: #fff; }
+
+/* ── Flow sections ── */
+.flow-sec { display: none; max-width: 580px; margin: 0 auto; }
+.flow-sec.active { display: block; }
+
+/* ── Legend ── */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  padding: 13px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 28px;
+}
+.leg { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--text2); font-weight: 500; }
+.leg-dot { width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; }
+.leg-dot.dashed { background: transparent; border: 1.5px dashed; }
+
+/* ── Flow layout ── */
+.flow { display: flex; flex-direction: column; align-items: center; }
+
+/* connector line + arrowhead */
+.conn {
+  width: 2px;
+  min-height: 22px;
+  background: var(--line);
+  position: relative;
+  flex-shrink: 0;
+}
+.conn::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--line);
+}
+
+/* ── Node base ── */
+.node {
+  width: 100%;
+  max-width: 480px;
+  border-radius: var(--radius);
+  padding: 11px 15px 11px 14px;
+  box-shadow: var(--shadow);
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  border: 1.5px solid transparent;
+}
+.ntag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #fff;
+}
+.ntext { font-size: 13.5px; font-weight: 600; line-height: 1.4; color: var(--text); }
+.nsub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--text2);
+  margin-top: 3px;
+  line-height: 1.5;
+}
+
+/* ── Node variants ── */
+.n-cap {
+  background: var(--text);
+  border-color: var(--text);
+  border-radius: 999px;
+  max-width: 160px;
+  justify-content: center;
+  padding: 9px 24px;
+}
+.n-cap .ntext {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--bg);
+}
+
+.n-adm { background: var(--adm-lt); border-color: var(--adm-mid); }
+.n-adm .ntag { background: var(--adm-mid); }
+
+.n-stf { background: var(--stf-lt); border-color: var(--stf-mid); }
+.n-stf .ntag { background: var(--stf-mid); }
+
+.n-sys { background: var(--sys-lt); border-color: var(--sys-mid); border-style: dashed; }
+.n-sys .ntag { background: var(--sys-mid); }
+
+.n-dec {
+  background: var(--dec-lt);
+  border-color: var(--dec-mid);
+  border-width: 2px;
+}
+.n-dec .ntag { background: var(--dec-mid); }
+.n-dec .ntext::before { content: '◆ '; font-size: 10px; opacity: .7; }
+
+.n-ok  { background: var(--ok-lt);  border-color: var(--ok-mid);  }
+.n-ok .ntag  { background: var(--ok-mid);  }
+.n-err { background: var(--err-lt); border-color: var(--err-mid); }
+.n-err .ntag { background: var(--err-mid); }
+.n-wrn { background: var(--wrn-lt); border-color: var(--wrn-mid); }
+.n-wrn .ntag { background: var(--wrn-mid); }
+
+/* ── Section divider (loop marker) ── */
+.loop-marker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 4px 14px;
+  border: 1px dashed var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  margin: 2px 0;
+}
+
+/* ── Branches ── */
+.branches {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  gap: 8px;
+}
+.b-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+.b-tag {
+  font-family: 'Sora', sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  padding: 3px 11px;
+  border-radius: 999px;
+  margin-bottom: 1px;
+}
+.b-yes { background: var(--ok-lt);  color: var(--ok);  }
+.b-no  { background: var(--err-lt); color: var(--err); }
+
+/* nodes inside branches get full width of their column */
+.b-col .node { max-width: 100%; width: 100%; }
+
+/* ── Responsive ── */
+@media (max-width: 520px) {
+  .branches { flex-direction: column; }
+  .b-col { width: 100%; }
+}
+</style>
+
+<div class="header">
+  <div class="header-left">
+    <div class="wordmark">Ship<em>Desk</em></div>
+    <div class="header-eyebrow">Pre-PRD Flow Verification · Admin Upload · Staff Retrieval</div>
+  </div>
+  <button class="theme-btn" onclick="(function(){const r=document.documentElement;r.setAttribute('data-theme',r.getAttribute('data-theme')==='dark'?'light':'dark')})()">Toggle theme</button>
+</div>
+
+<div class="tabs">
+  <button class="tab on-adm" id="tab-adm" onclick="show('adm')">📤 Admin — Invoice Upload</button>
+  <button class="tab" id="tab-stf" onclick="show('stf')">📱 Staff — Data Retrieval</button>
+</div>
+
+<!-- ════════════════ ADMIN FLOW ════════════════ -->
+<div class="flow-sec active" id="flow-adm">
+
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:var(--adm-mid)"></div>Admin action</div>
+    <div class="leg"><div class="leg-dot dashed" style="border-color:var(--sys-mid)"></div>Automatic / system</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--dec-mid)"></div>Decision</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--ok-mid)"></div>Success</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--err-mid)"></div>Error / flagged</div>
+  </div>
+
+  <div class="flow">
+
+    <div class="node n-cap"><div class="ntext">Start</div></div>
+    <div class="conn"></div>
+
+    <div class="node n-adm">
+      <span class="ntag">Admin</span>
+      <div>
+        <div class="ntext">Admin logs in to Khep</div>
+        <div class="nsub">Supabase Auth — email + password</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="node n-adm">
+      <span class="ntag">Admin</span>
+      <div>
+        <div class="ntext">Opens Upload section in the dashboard</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="node n-adm">
+      <span class="ntag">Admin</span>
+      <div>
+        <div class="ntext">Selects and uploads PDF file</div>
+        <div class="nsub">One PDF = multiple orders · all from one platform</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="node n-sys">
+      <span class="ntag">Auto</span>
+      <div>
+        <div class="ntext">PDF stored in Supabase Storage</div>
+        <div class="nsub">File path returned to Next.js</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="node n-sys">
+      <span class="ntag">Auto</span>
+      <div>
+        <div class="ntext">Next.js calls Render microservice</div>
+        <div class="nsub">Passes Supabase Storage file path as payload</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="node n-sys">
+      <span class="ntag">Auto</span>
+      <div>
+        <div class="ntext">pymupdf detects platform from PDF content</div>
+        <div class="nsub">Amazon · Myntra · Flipkart · Pepperfry</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="node n-sys">
+      <span class="ntag">Auto</span>
+      <div>
+        <div class="ntext">PDF split into per-order page groups</div>
+        <div class="nsub">Amazon / Myntra → 2 pages per order&nbsp;&nbsp;·&nbsp;&nbsp;Flipkart / Pepperfry → 1 page per order</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="loop-marker">↻ Repeated for each order group</div>
+    <div class="conn"></div>
+
+    <div class="node n-sys">
+      <span class="ntag">Auto</span>
+      <div>
+        <div class="ntext">Extract order data from page group</div>
+        <div class="nsub">Order ID · Platform SKU · Qty · AWB number · Dispatch date</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="node n-sys">
+      <span class="ntag">Auto</span>
+      <div>
+        <div class="ntext">Lookup Platform SKU in Master Catalog</div>
+        <div class="nsub">Maps to Internal SKU + product name + dimensions</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="node n-dec">
+      <span class="ntag">Decision</span>
+      <div><div class="ntext">Platform SKU found in Master Catalog?</div></div>
+    </div>
+    <div class="branches">
+      <div class="b-col">
+        <div class="b-tag b-yes">YES ✓</div>
+        <div class="conn"></div>
+        <div class="node n-sys">
+          <span class="ntag">Auto</span>
+          <div><div class="ntext">Continue to next check</div></div>
+        </div>
+      </div>
+      <div class="b-col">
+        <div class="b-tag b-no">NO ✗</div>
+        <div class="conn"></div>
+        <div class="node n-err">
+          <span class="ntag">Flagged</span>
+          <div>
+            <div class="ntext">Unknown SKU — order held</div>
+            <div class="nsub">Admin alerted in dashboard</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="node n-dec">
+      <span class="ntag">Decision</span>
+      <div>
+        <div class="ntext">Is this a Combo SKU?</div>
+        <div class="nsub">Multiple products sold as one bundle</div>
+      </div>
+    </div>
+    <div class="branches">
+      <div class="b-col">
+        <div class="b-tag b-yes">YES ✓</div>
+        <div class="conn"></div>
+        <div class="node n-sys">
+          <span class="ntag">Auto</span>
+          <div>
+            <div class="ntext">Expand into component SKUs</div>
+            <div class="nsub">Each component written as a separate line item</div>
+          </div>
+        </div>
+      </div>
+      <div class="b-col">
+        <div class="b-tag b-no">NO ✗</div>
+        <div class="conn"></div>
+        <div class="node n-sys">
+          <span class="ntag">Auto</span>
+          <div><div class="ntext">Single product — continue</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="node n-dec">
+      <span class="ntag">Decision</span>
+      <div>
+        <div class="ntext">Does order have a dispatch date different from today?</div>
+        <div class="nsub">e.g. PDF uploaded Aug 23 but order ships Aug 25 · Myntra: upload date used as proxy</div>
+      </div>
+    </div>
+    <div class="branches">
+      <div class="b-col">
+        <div class="b-tag b-yes">YES — future date</div>
+        <div class="conn"></div>
+        <div class="node n-sys">
+          <span class="ntag">Auto</span>
+          <div>
+            <div class="ntext">Order stored under its actual dispatch date</div>
+            <div class="nsub">Appears in staff view on the correct future date pill — not today's</div>
+          </div>
+        </div>
+      </div>
+      <div class="b-col">
+        <div class="b-tag b-no">NO — today</div>
+        <div class="conn"></div>
+        <div class="node n-sys">
+          <span class="ntag">Auto</span>
+          <div><div class="ntext">Order stored under today's date — continue</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="node n-sys">
+      <span class="ntag">Auto</span>
+      <div>
+        <div class="ntext">Write order row to Supabase DB</div>
+        <div class="nsub">Status: pending · Dispatch date stored · Timestamp recorded</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="node n-dec">
+      <span class="ntag">Decision</span>
+      <div><div class="ntext">More order groups remaining in this PDF?</div></div>
+    </div>
+    <div class="branches">
+      <div class="b-col">
+        <div class="b-tag b-yes">YES ✓</div>
+        <div class="conn"></div>
+        <div class="node n-sys">
+          <span class="ntag">Auto</span>
+          <div>
+            <div class="ntext">Move to next order group</div>
+            <div class="nsub">↩ Loop back to Extract step</div>
+          </div>
+        </div>
+      </div>
+      <div class="b-col">
+        <div class="b-tag b-no">NO ✗</div>
+        <div class="conn"></div>
+        <div class="node n-sys">
+          <span class="ntag">Auto</span>
+          <div><div class="ntext">All orders in PDF parsed — continue</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="node n-ok">
+      <span class="ntag">Done</span>
+      <div>
+        <div class="ntext">Admin sees all parsed orders in real-time</div>
+        <div class="nsub">Supabase Realtime updates dashboard — no page refresh</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="node n-ok">
+      <span class="ntag">Done</span>
+      <div>
+        <div class="ntext">Orders appear in staff pick list automatically</div>
+        <div class="nsub">Supabase Realtime — staff sees new work without refreshing</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="node n-adm">
+      <span class="ntag">Admin</span>
+      <div>
+        <div class="ntext">Admin can open Staff View from the dashboard</div>
+        <div class="nsub">Sees exactly what any staff member sees — pick list, pack queue, packing screen, order details · Read-only · Labeled "Staff View" in the admin panel</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="node n-cap"><div class="ntext">End</div></div>
+
+  </div>
+</div>
+
+<!-- ════════════════ STAFF FLOW ════════════════ -->
+<div class="flow-sec" id="flow-stf">
+
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:var(--stf-mid)"></div>Staff action</div>
+    <div class="leg"><div class="leg-dot dashed" style="border-color:var(--sys-mid)"></div>Automatic / system</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--dec-mid)"></div>Decision</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--ok-mid)"></div>Success / auto-complete</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--err-mid)"></div>Error / flag</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--wrn-mid)"></div>Warning / alert</div>
+  </div>
+
+  <div class="flow">
+
+    <div class="node n-cap"><div class="ntext">Start</div></div>
+    <div class="conn"></div>
+
+    <!-- ── Step 1: Login ── -->
+    <div class="node n-stf">
+      <span class="ntag">Staff</span>
+      <div>
+        <div class="ntext">Staff logs in on personal mobile</div>
+        <div class="nsub">Supabase Auth — email + password · session persists across shifts</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <!-- ── Step 2: Home screen — date pills ── -->
+    <div class="node n-stf">
+      <span class="ntag">Staff</span>
+      <div>
+        <div class="ntext">Home screen loads — horizontal date pill row</div>
+        <div class="nsub">One scrollable pill per date that has orders (e.g. Aug 21 · Aug 23 · Aug 25)<br>Completed dates show a ✓ badge · Future dates visible but grayed until their day</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <!-- ── Step 3: Tap a date ── -->
+    <div class="node n-stf">
+      <span class="ntag">Staff</span>
+      <div>
+        <div class="ntext">Staff taps a date pill (e.g. Aug 23)</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <!-- ── Step 4: Auto-fetch ── -->
+    <div class="node n-sys">
+      <span class="ntag">Auto</span>
+      <div>
+        <div class="ntext">Supabase fetches all orders for that dispatch date</div>
+        <div class="nsub">Realtime subscription active — screen updates live as orders change</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <!-- ── Step 5: Two sections load ── -->
+    <div class="node n-sys">
+      <span class="ntag">Auto</span>
+      <div>
+        <div class="ntext">Two sections render on screen</div>
+        <div class="nsub">
+          <strong>① Summary card</strong> — consolidated product totals across all platforms for that day<br>
+          Real product images · Name · Internal SKU · Total qty needed (read-only, informational)<br>
+          <br>
+          <strong>② Platform accordions</strong> — Amazon · Myntra · Flipkart · Pepperfry<br>
+          Each accordion collapsed by default · order count badge shown per platform
+        </div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <!-- ── Step 6: Staff reads summary → shelves ── -->
+    <div class="node n-stf">
+      <span class="ntag">Staff</span>
+      <div>
+        <div class="ntext">Staff reads summary card → goes to shelves</div>
+        <div class="nsub">Collects all items for the day in one bulk run — no back-and-forth per order</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <!-- ── Step 7: Return + open accordion ── -->
+    <div class="node n-stf">
+      <span class="ntag">Staff</span>
+      <div>
+        <div class="ntext">Staff returns · opens a platform accordion</div>
+        <div class="nsub">Orders inside sorted by dispatch deadline ascending (earliest deadline first)</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <!-- ── Step 8: Expand an order ── -->
+    <div class="node n-stf">
+      <span class="ntag">Staff</span>
+      <div>
+        <div class="ntext">Staff expands an order row</div>
+        <div class="nsub">
+          <strong>Order header:</strong> Platform Order ID · AWB number · Dispatch deadline · Platform name<br>
+          <strong>Per line item:</strong> Product thumbnail · Product name · Internal SKU · Platform SKU · Size · Quantity<br>
+          <strong>Combos:</strong> Combo SKU shown as parent label · each component expanded as its own line (Internal SKU · name · qty)<br>
+          <strong>Packing note</strong> (if any) added by admin visible here
+        </div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <!-- ── Step 9: Tap product image ── -->
+    <div class="node n-stf">
+      <span class="ntag">Staff</span>
+      <div>
+        <div class="ntext">Staff taps a product thumbnail for visual verification</div>
+        <div class="nsub">Opens full-screen watermarked view — Staff ID + session code overlay<br>Screenshot prevention active (CSS user-select:none + keydown block)<br>Staff swipes or taps ✕ to close · repeats for each product in the order</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <!-- ── Step 10: Staff packs + scans ── -->
+    <div class="node n-stf">
+      <span class="ntag">Staff</span>
+      <div>
+        <div class="ntext">Staff packs items · sticks shipping label on box · taps "Scan Label"</div>
+        <div class="nsub">Camera opens via ZXing.js · barcode read in-browser · no app install needed</div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <!-- ── Step 11: Staff scans ── -->
+    <div class="node n-stf">
+      <span class="ntag">Staff</span>
+      <div><div class="ntext">Staff scans barcode on shipping label</div></div>
+    </div>
+    <div class="conn"></div>
+
+    <!-- ── Decision: AWB match? ── -->
+    <div class="node n-dec">
+      <span class="ntag">Decision</span>
+      <div><div class="ntext">Scanned AWB matches this order?</div></div>
+    </div>
+    <div class="branches">
+      <div class="b-col">
+        <div class="b-tag b-yes">YES ✓</div>
+        <div class="conn"></div>
+        <div class="node n-ok">
+          <span class="ntag">Packed</span>
+          <div>
+            <div class="ntext">Order confirmed packed</div>
+            <div class="nsub">Status → PACKED in Supabase · timestamp recorded</div>
+          </div>
+        </div>
+        <div class="conn"></div>
+        <div class="node n-sys">
+          <span class="ntag">Auto</span>
+          <div>
+            <div class="ntext">Real-time notification pushed to admin dashboard</div>
+            <div class="nsub">Supabase Realtime · shows: Order ID · AWB · Platform · packed by (staff name) · timestamp<br>Admin can review and manually verify if needed — human-in-the-loop confirmation</div>
+          </div>
+        </div>
+        <div class="conn"></div>
+        <div class="node n-sys">
+          <span class="ntag">Auto</span>
+          <div>
+            <div class="ntext">Order disappears from all other staff screens</div>
+            <div class="nsub">Other staff see: "Order #XXX already packed — pick up pace 😤"</div>
+          </div>
+        </div>
+        <div class="conn"></div>
+        <div class="node n-sys">
+          <span class="ntag">Auto</span>
+          <div>
+            <div class="ntext">Points awarded to packing staff</div>
+            <div class="nsub">+10 pts for packed order · +5 speed bonus if within target time</div>
+          </div>
+        </div>
+        <div class="conn"></div>
+        <div class="node n-dec">
+          <span class="ntag">Decision</span>
+          <div><div class="ntext">All orders in this platform packed?</div></div>
+        </div>
+        <div class="branches">
+          <div class="b-col">
+            <div class="b-tag b-yes">YES ✓</div>
+            <div class="conn"></div>
+            <div class="node n-ok">
+              <span class="ntag">Auto</span>
+              <div>
+                <div class="ntext">Platform auto-marked complete ✓</div>
+                <div class="nsub">Accordion collapses with green ✓ badge</div>
+              </div>
+            </div>
+          </div>
+          <div class="b-col">
+            <div class="b-tag b-no">NO —</div>
+            <div class="conn"></div>
+            <div class="node n-sys">
+              <span class="ntag">Auto</span>
+              <div><div class="ntext">Platform still in progress — continue</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="b-col">
+        <div class="b-tag b-no">NO ✗</div>
+        <div class="conn"></div>
+        <div class="node n-err">
+          <span class="ntag">Mismatch</span>
+          <div>
+            <div class="ntext">Mismatch warning shown on staff screen</div>
+            <div class="nsub">Event logged to admin · −10 pts · order remains open</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <!-- ── Decision: More orders? ── -->
+    <div class="node n-dec">
+      <span class="ntag">Decision</span>
+      <div><div class="ntext">More orders remaining in queue?</div></div>
+    </div>
+    <div class="branches">
+      <div class="b-col">
+        <div class="b-tag b-yes">YES ✓</div>
+        <div class="conn"></div>
+        <div class="node n-stf">
+          <span class="ntag">Staff</span>
+          <div>
+            <div class="ntext">↩ Back to platform accordions</div>
+            <div class="nsub">Opens next pending order by dispatch deadline</div>
+          </div>
+        </div>
+      </div>
+      <div class="b-col">
+        <div class="b-tag b-no">NO —</div>
+        <div class="conn"></div>
+        <div class="node n-ok">
+          <span class="ntag">Auto</span>
+          <div>
+            <div class="ntext">Date pill auto-marked complete ✓</div>
+            <div class="nsub">All platforms packed · date pill turns green</div>
+          </div>
+        </div>
+        <div class="conn"></div>
+        <div class="node n-ok">
+          <span class="ntag">Done</span>
+          <div>
+            <div class="ntext">Session summary screen</div>
+            <div class="nsub">Orders packed · points earned · current leaderboard rank</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="conn"></div>
+
+    <div class="node n-cap"><div class="ntext">End</div></div>
+
+  </div>
+</div>
+
+<script>
+function show(tab) {
+  document.querySelectorAll('.flow-sec').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => { t.className = 'tab'; });
+  document.getElementById('flow-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('on-' + tab);
+}
+</script>
