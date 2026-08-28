@@ -33,6 +33,54 @@ The repository is currently in the planning and specification stage. Implementat
 - [`docs/staff-flow-prototype.html`](docs/staff-flow-prototype.html) - staff interface prototype
 - [`AGENTS.md`](AGENTS.md) - contributor guidelines
 
+## Local Development
+
+The repository contains two independently runnable services. Copy each
+`.env.example` to `.env` or `.env.local` as appropriate and add credentials
+only to your local environment.
+
+### Web app
+
+```text
+cd web
+npm install
+npm run dev
+```
+
+The web app runs at `http://localhost:3000`.
+
+```text
+npm run format:check
+npm run lint
+npm test
+npm run build
+```
+
+### Parse service
+
+```text
+cd parse-service
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+```
+
+The liveness endpoint is `GET http://localhost:8000/health` and returns the
+service status. `POST /parse` is intentionally a typed placeholder until the
+parser contract and extractors are implemented in issue #4. It requires the
+`X-Parser-Api-Key` header matching the server-only `PARSER_API_KEY` value and
+accepts HTTPS URLs only.
+
+```text
+pytest
+ruff check app tests
+ruff format --check app tests
+```
+
+GitHub Actions runs the same formatting, linting, test, and build checks for
+web changes and parser changes on pushes and pull requests.
+
 ## Phase 1 Boundaries
 
 Phase 1 does not include inventory management, courier API integrations, returns/RTO, analytics dashboards, multiple warehouses, customer-facing features, or a native mobile app.
