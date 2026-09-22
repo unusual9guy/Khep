@@ -1,0 +1,24 @@
+{
+  "name": "khep",
+  "version": "1.0.0",
+  "description": "Khep is an internal packing and shipping automation tool for Chitra Goenka Crafts & Creations, a D2C home decor brand selling through Amazon, Myntra, Flipkart, and Pepperfry.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unusual9guy/Khep.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/unusual9guy/Khep/issues"
+  },
+  "homepage": "https://github.com/unusual9guy/Khep#readme"
+}
